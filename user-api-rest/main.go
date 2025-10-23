@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
 type User struct {
 	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name" validate:"required"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 var users = []User{
@@ -18,8 +19,28 @@ var users = []User{
 	{ID: 2, Name: "Jane Doe", Email: "jane@example.com"},
 }
 
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i any) error {
+	return cv.validator.Struct(i)
+}
+
+func customerHTTPErrorHandler(err error, c echo.Context) {
+	code := http.StatusInternalServerError
+	msg := "Internal Server Error"
+	if he, ok := err.(*echo.HTTPError); ok {
+		code = he.Code
+		msg = he.Message.(string)
+	}
+	c.JSON(code, map[string]string{"error": msg})
+}
+
 func main() {
 	e := echo.New()
+	e.Validator = &CustomValidator{validator: validator.New()}
+	e.HTTPErrorHandler = customerHTTPErrorHandler
 
 	e.GET("/users", getUsers)
 	e.GET("/users/:id", getUser)
@@ -36,7 +57,7 @@ func getUser(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid user ID"})
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
 	}
 
 	for _, user := range users {
@@ -44,13 +65,17 @@ func getUser(c echo.Context) error {
 			return c.JSON(http.StatusOK, user)
 		}
 	}
-	return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
+	return echo.NewHTTPError(http.StatusNotFound, "User not found")
 }
 
 func createUser(c echo.Context) error {
 	var newUser User
 	if err := c.Bind(&newUser); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid input")
+	}
+
+	if err := c.Validate(&newUser); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	newUser.ID = len(users) + 1

@@ -8,12 +8,19 @@
             "mode": "auto",
             "program": "${workspaceFolder}/hello/main.go"
         },
-                {
+        {
             "name": "[User API Restful]",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/user-api-rest/main.go"
+        },
+        {
+            "name": "[Security]",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/security/cmd/api.go"
         }
     ],
     "compounds": []
