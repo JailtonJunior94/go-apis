@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "[Hello]",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/hello/main.go"
+        },
+                {
+            "name": "[User API Restful]",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/user-api-rest/main.go"
+        }
+    ],
+    "compounds": []
+}
